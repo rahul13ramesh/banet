@@ -1,14 +1,7 @@
 # Introduction
-Partial implementation of [Hierarchical Boundary-Aware Neural Encoder for Video Captioning](https://arxiv.org/abs/1611.09312). The C3D part is implemented but not work well.
-
 **Difference from original paper**: In the original paper, the author sampled every 5 frames, while I sampled fix number of frames using *np.linspace*.
 
 # Requirements
-## Pretrained Model
-- VGG16 pretrained on ImageNet [PyTorch version]: https://download.pytorch.org/models/vgg16-397923af.pth
-- ResNet50 pretrained on ImageNet [PyTorch version]: https://s3.amazonaws.com/pytorch/models/resnet50-19c8e357.pth
-- C3D pretrained on Sports1M [ported from Keras]: http://imagelab.ing.unimore.it/files/c3d_pytorch/c3d.pickle
-
 ## Datasets
 - MSVD: https://www.microsoft.com/en-us/download/details.aspx?id=52422
 - MSR-VTT: http://ms-multimedia-challenge.com/2017/dataset

@@ -7,7 +7,7 @@ import os
 import time
 
 
-# 训练相关的超参数
+# Training Hyper-parameters
 num_epochs = 100
 batch_size = 100
 learning_rate = 3e-4
@@ -17,10 +17,10 @@ use_checkpoint = False
 time_format = '%m-%d_%X'
 current_time = time.strftime(time_format, time.localtime())
 env_tag = '%s' % (current_time)
-log_environment = os.path.join('logs', env_tag)  # tensorboard的记录环境
+#  log_environment = os.path.join('logs', env_tag)  # tensorboard的记录环境
 
 
-# 模型相关的超参数
+# Model parameters
 projected_size = 500
 hidden_size = 1024  # 循环网络的隐层单元数目
 mid_size = 128  # 边界检测层的中间表示维度
@@ -44,11 +44,11 @@ msrvtt_train_range = (0, 6512)
 msrvtt_val_range = (6513, 7009)
 msrvtt_test_range = (7010, 9999)
 
-msvd_video_root = './datasets/MSVD/youtube_videos'
-msvd_csv_path = './datasets/MSVD/MSR Video Description Corpus_refine.csv'  # 手动修改一些数据集中的错误
+msvd_video_root = '../data/MSVD/youtube_videos'
+msvd_csv_path = '../data/MSVD/MSRVideoDescription.csv'  # 手动修改一些数据集中的错误
 msvd_video_name2id_map = './datasets/MSVD/youtube_mapping.txt'
 msvd_anno_json_path = './datasets/MSVD/annotations.json'  # MSVD并未提供这个文件，需要自己写代码生成（build_msvd_annotation.py）
-msvd_video_sort_lambda = lambda x: int(x[3:-4])
+msvd_video_sort_lambda = lambda x: int(x[0:-4])
 msvd_train_range = (0, 1200)
 msvd_val_range = (1200, 1300)
 msvd_test_range = (1300, 1970)

@@ -153,7 +153,8 @@ def build_msvd_annotation():
     # 首先根据MSVD数据集官方提供的CSV文件确定每段视频的名字
     video_data = pd.read_csv(msvd_csv_path, sep=',', encoding='utf8')
     video_data = video_data[video_data['Language'] == 'English']
-    # 只使用clean的描述
+    video_data = video_data[video_data['Source'] == 'clean']  # Fetch only clean data
+    # 只使用clean的描述 
     # 不行，有的视频没有clean的描述
     # video_data = video_data[video_data['Source'] == 'clean']
     video_data['VideoName'] = video_data.apply(lambda row: row['VideoID'] + '_' +
