@@ -86,3 +86,5 @@ The following table shows the performance of this implementation (using ResNet50
 ![MSR-VTT](./img/MSR-VTT.png  "MSR-VTT")
 
 **Note**: The raising of loss is because of [schedule sampling](https://arxiv.org/abs/1506.03099).
+
+<!-- Clean results and feats -->

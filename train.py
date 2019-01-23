@@ -69,7 +69,7 @@ loss_count = 0
 for epoch in range(num_epochs):
     epsilon = max(0.6, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
     print('epoch:%d\tepsilon:%.8f' % (epoch, epsilon))
-    log_value('epsilon', epsilon, epoch)
+    #  log_value('epsilon', epsilon, epoch)
     for i, (videos, captions, cap_lens, video_ids) in enumerate(train_loader, start=1):
         # 构造mini batch的Variable
         videos = Variable(videos)
@@ -90,7 +90,7 @@ for epoch in range(num_epochs):
         targets = torch.cat([targets[j][:cap_lens[j]] for j in range(bsz)], 0)
         targets = targets.view(-1)
         loss = criterion(outputs, targets)
-        log_value('loss', loss.data[0], epoch * total_step + i)
+        #  log_value('loss', loss.data[0], epoch * total_step + i)
         loss_count += loss.data[0]
         loss.backward()
         optimizer.step()
@@ -116,7 +116,7 @@ for epoch in range(num_epochs):
     metrics = evaluate(vocab, banet, test_range, test_prediction_txt_path, reference)
     enablePrint()
     for k, v in metrics.items():
-        log_value(k, v, epoch)
+        #  log_value(k, v, epoch)
         print('%s: %.6f' % (k, v))
         if k == 'METEOR' and v > best_meteor:
             # 备份在val集上METEOR值最好的模型

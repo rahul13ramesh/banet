@@ -151,7 +151,7 @@ def prepare_caption(vocab, split_dict, anno_data):
         video_ids[split].append(video_id)
 
     # 统计一下有多少的caption长度过长
-    print('There are %.3f%% too long captions' % (100 * float(count) / len(anno_data)))
+    print('There are %.3f%% too long captions' % (100 * float(count) / (len(anno_data) + 0.01)))
 
     # 分别对train val test这三个划分进行存储
     with open(train_caption_pkl_path, 'wb') as f:

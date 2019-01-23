@@ -2,6 +2,7 @@ models/
 tags
 visuals/
 coco-caption/
+coco-caption
 logs/
 logs*/
 *.gv

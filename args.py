@@ -45,7 +45,7 @@ msrvtt_val_range = (6513, 7009)
 msrvtt_test_range = (7010, 9999)
 
 msvd_video_root = '../data/youtube_videos/YouTubeClips'
-msvd_csv_path = '../data/MSRVideoDescription.csv'  # Manually modify errors in some datasets
+msvd_csv_path = '../data/MSRVideoDescriptionNew.csv'  # Manually modify errors in some datasets
 msvd_video_name2id_map = '../data/youtube_mapping.txt'
 msvd_anno_json_path = '../data/annotations.json'  # Genrate this file not provided by MSVD
 msvd_video_sort_lambda = lambda x: int(x[0:-4])
