@@ -23,7 +23,7 @@ from args import use_cuda, use_checkpoint
 from args import banet_pth_path, optimizer_pth_path
 from args import best_banet_pth_path, best_optimizer_pth_path
 from args import test_range, test_prediction_txt_path, test_reference_txt_path
-from args import log_environment
+#  from args import log_environment
 #  from tensorboard_logger import configure, log_value
 sys.path.append('./coco-caption/')
 from pycocotools.coco import COCO

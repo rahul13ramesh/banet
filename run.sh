@@ -7,8 +7,8 @@ source /tools/config.sh
 source  /scratch/scratch1/shweta/virtualEnv/shweta_env/bin/activate
 
 cd /scratch/scratch1/rahul/videoCaption/banet/
-#/scratch/scratch1/shweta/video-captioning/virtualEnv/videocaption/bin/python2.7 video.py > out.txt
-python -u video.py > out.txt
-#python -u caption.py > out_caption_nominus.txt
-#python -u  train.py > out_train_nominus
-# python -u  evaluate.py > out_eval
+
+python -u video.py > logs/out_video.log
+python -u caption.py > logs/out_caption.log
+python -u  train.py > logs/out_train.log
+python -u  evaluate.py > logs/out_eval.log

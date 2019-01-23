@@ -12,7 +12,7 @@ import numpy as np
 import skimage
 import torch
 from torch.autograd import Variable
-from model import AppearanceEncoder, MotionEncoder
+from model import AppearanceEncoder
 from args import video_root, video_sort_lambda
 from args import feature_h5_path, feature_h5_feats, feature_h5_lens
 from args import max_frames, feature_size

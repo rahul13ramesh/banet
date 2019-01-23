@@ -1,24 +1,13 @@
-models
 models/
-datasets
 tags
-datasets/
-feats
-feats/
-feats_old/
-feats_bak/
-results/
 visuals/
-# coco-caption/
+coco-caption/
 logs/
 logs*/
 *.gv
 *.pyc
 *.npy
 *.pth
-
-# Emacs
-.tramp_history
 
 # LaTeX
 *.pdf
