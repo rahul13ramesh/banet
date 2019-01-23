@@ -1,7 +1,5 @@
 # coding: utf-8
-'''
-载入显著图特征，用vgg16提取
-'''
+''' Load image features and extract with VGG '''
 
 from __future__ import print_function
 from __future__ import division
@@ -81,21 +79,22 @@ def resize_frame(image, target_height=224, target_width=224):
 def preprocess_frame(image, target_height=224, target_width=224):
     image = resize_frame(image, target_height, target_width)
     image = skimage.img_as_float(image).astype(np.float32)
-    # 根据在ILSVRC数据集上的图像的均值（RGB格式）进行白化
+    # Whitening based on mean of ILSVRC dataset
     image -= np.array([0.485, 0.456, 0.406])
     image /= np.array([0.229, 0.224, 0.225])
     return image
 
 
-def extract_features(aencoder, mencoder):
-    # 读取视频列表，让视频按照id升序排列
-    videos = sorted(os.listdir(video_root), key=video_sort_lambda)
+def extract_features(aencoder):
+    # Read videos list and let  the videos sort by id
+	# This should be same as youtube mapping
+    videos = sorted(os.listdir(video_root))
     nvideos = len(videos)
-
-    # 创建保存视频特征的hdf5文件
+ 
+    #  Create hdf5 file that saves feature
     if os.path.exists(feature_h5_path):
-        # 如果hdf5文件已经存在，说明之前处理过，或许是没有完全处理完
-        # 使用r+ (read and write)模式读取，以免覆盖掉之前保存好的数据
+        # If it exists, that means it has been processed before but not completely
+        # Read using read-write mode, avoid overwriting previously saved data
         h5 = h5py.File(feature_h5_path, 'r+')
         dataset_feats = h5[feature_h5_feats]
         dataset_lens = h5[feature_h5_lens]
@@ -109,31 +108,32 @@ def extract_features(aencoder, mencoder):
     for i, video in enumerate(videos):
         print(video, end=' ')
         video_path = os.path.join(video_root, video)
-        # 提取视频帧以及视频小块
+        # Extract video frames and video tiles
         frame_list, clip_list, frame_count = sample_frames(video_path, train=True)
         print(frame_count)
 
-        # 把图像做一下处理，然后转换成（batch, channel, height, width）的格式
+        # Image processed and converted to (B, C, H, W) format
         frame_list = np.array([preprocess_frame(x) for x in frame_list])
         frame_list = frame_list.transpose((0, 3, 1, 2))
         frame_list = Variable(torch.from_numpy(frame_list), volatile=True).cuda()
 
-        # 视频特征的shape是max_frames x (2048 + 4096)
-        # 如果帧的数量小于max_frames，则剩余的部分用0补足
+        # The shape of video featuers is max_frames x (2048 + 4096)
+        # If the number of frames less than max_frames, padd by zeroes
         feats = np.zeros((max_frames, feature_size), dtype='float32')
 
-        # 先提取表观特征
-        af = aencoder(frame_list)
+        #  Extract feature list
+        af = aencoder(frame_list).data.cpu().numpy()
 
-        # 再提取动作特征
-        clip_list = np.array([[resize_frame(x, 112, 112)
-                               for x in clip] for clip in clip_list])
-        clip_list = clip_list.transpose(0, 4, 1, 2, 3).astype(np.float32)
-        clip_list = Variable(torch.from_numpy(clip_list), volatile=True).cuda()
-        mf = mencoder(clip_list)
+        #  Uncomment to use motion encoder
+        #  Extract Action features
+        #  clip_list = np.array([[resize_frame(x, 112, 112)
+                               #  for x in clip] for clip in clip_list])
+        #  clip_list = clip_list.transpose(0, 4, 1, 2, 3).astype(np.float32)
+        #  clip_list = Variable(torch.from_numpy(clip_list), volatile=True).cuda()
+        #  mf = mencoder(clip_list)
 
-        # 合并表观和动作特征
-        feats[:frame_count, :] = torch.cat([af, mf], dim=1).data.cpu().numpy()
+        # Merge feature, motion encoders
+        feats[:frame_count, :] = af
         dataset_feats[i] = feats
         dataset_lens[i] = frame_count
 
@@ -143,11 +143,11 @@ def main():
     aencoder.eval()
     aencoder.cuda()
 
-    mencoder = MotionEncoder()
-    mencoder.eval()
-    mencoder.cuda()
+    #  mencoder = MotionEncoder()
+    #  mencoder.eval()
+    #  mencoder.cuda()
 
-    extract_features(aencoder, mencoder)
+    extract_features(aencoder)
 
 
 if __name__ == '__main__':

@@ -99,19 +99,19 @@ class C3D(nn.Module):
         return x
 
 
-class MotionEncoder(nn.Module):
+#  class MotionEncoder(nn.Module):
 
-    def __init__(self):
-        super(MotionEncoder, self).__init__()
-        self.c3d = C3D()
-        pretrained_dict = torch.load(c3d_checkpoint)
-        model_dict = self.c3d.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-        model_dict.update(pretrained_dict)
-        self.c3d.load_state_dict(model_dict)
+    #  def __init__(self):
+        #  super(MotionEncoder, self).__init__()
+        #  self.c3d = C3D()
+        #  pretrained_dict = torch.load(c3d_checkpoint)
+        #  model_dict = self.c3d.state_dict()
+        #  pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        #  model_dict.update(pretrained_dict)
+        #  self.c3d.load_state_dict(model_dict)
 
-    def forward(self, x):
-        return self.c3d(x)
+    #  def forward(self, x):
+        #  return self.c3d(x)
 
 
 class BinaryGate(Function):
