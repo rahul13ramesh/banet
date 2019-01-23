@@ -92,7 +92,7 @@ def eval_collate_fn(data):
     return videos, video_ids
 
 
-def get_train_loader(cap_pkl, feature_h5, batch_size=10, shuffle=True, num_workers=3, pin_memory=True):
+def get_train_loader(cap_pkl, feature_h5, batch_size=10, shuffle=True, num_workers=0, pin_memory=True):
     v2t = V2TDataset(cap_pkl, feature_h5)
     data_loader = torch.utils.data.DataLoader(dataset=v2t,
                                               batch_size=batch_size,
@@ -103,7 +103,7 @@ def get_train_loader(cap_pkl, feature_h5, batch_size=10, shuffle=True, num_worke
     return data_loader
 
 
-def get_eval_loader(cap_pkl, feature_h5, batch_size=200, shuffle=False, num_workers=1, pin_memory=False):
+def get_eval_loader(cap_pkl, feature_h5, batch_size=200, shuffle=False, num_workers=0, pin_memory=False):
     vd = VideoDataset(cap_pkl, feature_h5)
     data_loader = torch.utils.data.DataLoader(dataset=vd,
                                               batch_size=batch_size,

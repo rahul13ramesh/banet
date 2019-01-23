@@ -16,7 +16,7 @@ from torch.autograd import Variable, Function
 import torchvision.models as models
 
 from args import resnet_checkpoint
-from args import c3d_checkpoint
+#  from args import c3d_checkpoint
 
 
 class AppearanceEncoder(nn.Module):

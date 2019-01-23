@@ -24,12 +24,11 @@ from args import banet_pth_path, optimizer_pth_path
 from args import best_banet_pth_path, best_optimizer_pth_path
 from args import test_range, test_prediction_txt_path, test_reference_txt_path
 from args import log_environment
-from tensorboard_logger import configure, log_value
+#  from tensorboard_logger import configure, log_value
 sys.path.append('./coco-caption/')
 from pycocotools.coco import COCO
 
-configure(log_environment, flush_secs=10)
-
+#  configure(log_environment, flush_secs=10)
 
 # 加载词典
 with open(vocab_pkl_path, 'rb') as f:

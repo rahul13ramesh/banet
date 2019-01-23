@@ -44,10 +44,10 @@ msrvtt_train_range = (0, 6512)
 msrvtt_val_range = (6513, 7009)
 msrvtt_test_range = (7010, 9999)
 
-msvd_video_root = '../data/MSVD/youtube_videos'
-msvd_csv_path = '../data/MSVD/MSRVideoDescription.csv'  # 手动修改一些数据集中的错误
-msvd_video_name2id_map = './datasets/MSVD/youtube_mapping.txt'
-msvd_anno_json_path = './datasets/MSVD/annotations.json'  # MSVD并未提供这个文件，需要自己写代码生成（build_msvd_annotation.py）
+msvd_video_root = '../data/youtube_videos'
+msvd_csv_path = '../data/MSRVideoDescription.csv'  # Manually modify errors in some datasets
+msvd_video_name2id_map = '../data/youtube_mapping.txt'
+msvd_anno_json_path = '../data/annotations.json'  # Genrate this file not provided by MSVD
 msvd_video_sort_lambda = lambda x: int(x[0:-4])
 msvd_train_range = (0, 1200)
 msvd_val_range = (1200, 1300)
@@ -99,7 +99,7 @@ test_prediction_txt_path = os.path.join(result_dir, ds + '_test_predictions.txt'
 # checkpoint相关的超参数
 resnet_checkpoint = './models/resnet50-19c8e357.pth'  # 直接用pytorch训练的模型
 vgg_checkpoint = './models/vgg16-00b39a1b.pth'  # 从caffe转换而来
-c3d_checkpoint = './models/c3d.pickle'
+#  c3d_checkpoint = './models/c3d.pickle'
 
 banet_pth_path = os.path.join(result_dir, ds + '_banet.pth')
 best_banet_pth_path = os.path.join(result_dir, ds + '_best_banet.pth')
