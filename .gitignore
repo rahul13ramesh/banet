@@ -1,6 +1,7 @@
 models
 models/
 datasets
+tags
 datasets/
 feats
 feats/
