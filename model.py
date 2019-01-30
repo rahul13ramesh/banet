@@ -4,19 +4,14 @@
 Boundary-aware video captioning
 '''
 
-import math
 import random
 from builtins import range
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.parameter import Parameter
-from torch.autograd import Variable, Function
 import torchvision.models as models
 
 from args import resnet_checkpoint
-#  from args import c3d_checkpoint
 
 
 class AppearanceEncoder(nn.Module):
@@ -45,130 +40,6 @@ class AppearanceEncoder(nn.Module):
         return x
 
 
-class C3D(nn.Module):
-    '''
-    C3D model (https://github.com/DavideA/c3d-pytorch/blob/master/C3D_model.py)
-    '''
-
-    def __init__(self):
-        super(C3D, self).__init__()
-        self.conv1 = nn.Conv3d(3, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool1 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
-
-        self.conv2 = nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool2 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv3a = nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv3b = nn.Conv3d(256, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool3 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv4a = nn.Conv3d(256, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv4b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool4 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv5a = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv5b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool5 = nn.MaxPool3d(kernel_size=(
-            2, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1))
-
-        self.fc6 = nn.Linear(8192, 4096)
-        self.fc7 = nn.Linear(4096, 4096)
-
-        self.dropout = nn.Dropout(p=0.5)
-
-    def forward(self, x):
-        x = self.pool1(F.relu(self.conv1(x)))
-        x = self.pool2(F.relu(self.conv2(x)))
-
-        x = F.relu(self.conv3a(x))
-        x = F.relu(self.conv3b(x))
-        x = self.pool3(x)
-
-        x = F.relu(self.conv4a(x))
-        x = F.relu(self.conv4b(x))
-        x = self.pool4(x)
-
-        x = F.relu(self.conv5a(x))
-        x = F.relu(self.conv5b(x))
-        x = self.pool5(x)
-
-        x = x.view(-1, 8192)
-        x = self.dropout(F.relu(self.fc6(x)))
-        x = self.dropout(F.relu(self.fc7(x)))
-
-        return x
-
-
-#  class MotionEncoder(nn.Module):
-
-    #  def __init__(self):
-        #  super(MotionEncoder, self).__init__()
-        #  self.c3d = C3D()
-        #  pretrained_dict = torch.load(c3d_checkpoint)
-        #  model_dict = self.c3d.state_dict()
-        #  pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-        #  model_dict.update(pretrained_dict)
-        #  self.c3d.load_state_dict(model_dict)
-
-    #  def forward(self, x):
-        #  return self.c3d(x)
-
-
-class BinaryGate(Function):
-    '''
-    二值门单元
-    forward中的二值门单元分为train和eval两种：
-    train: 阈值为[0,1]内均匀分布的随机采样值随机的二值神经元，
-    eval: 固定阈值为0.5的二值神经元
-    backward中的二值门单元的导函数用identity函数
-    '''
-
-    @staticmethod
-    def forward(ctx, input, training=False, inplace=False):
-        if inplace:
-            output = input
-        else:
-            output = input.clone()
-        ctx.thrs = random.uniform(0, 1) if training else 0.5
-        output[output > ctx.thrs] = 1
-        output[output <= ctx.thrs] = 0
-        return output
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        return grad_output, None, None
-
-
-class BoundaryDetector(nn.Module):
-    '''
-    Boundary Detector，边界检测模块
-    '''
-
-    def __init__(self, i_features, h_features, s_features, inplace=False):
-        super(BoundaryDetector, self).__init__()
-        self.inplace = inplace
-        self.Wsi = Parameter(torch.Tensor(s_features, i_features))
-        self.Wsh = Parameter(torch.Tensor(s_features, h_features))
-        self.bias = Parameter(torch.Tensor(s_features))
-        self.vs = Parameter(torch.Tensor(1, s_features))
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.Wsi.size(1))
-        self.Wsi.data.uniform_(-stdv, stdv)
-        self.Wsh.data.uniform_(-stdv, stdv)
-        self.bias.data.uniform_(-stdv, stdv)
-        self.vs.data.uniform_(-stdv, stdv)
-
-    def forward(self, x, h):
-        z = F.linear(x, self.Wsi) + F.linear(h, self.Wsh) + self.bias
-        z = F.sigmoid(F.linear(z, self.vs))
-        return BinaryGate.apply(z, self.training, self.inplace)
-
-    def __repr__(self):
-        return self.__class__.__name__
-
- 
 class Encoder(nn.Module):
     '''
     Hierarchical Boundart-Aware视频编码器
@@ -197,26 +68,22 @@ class Encoder(nn.Module):
         self.lstm1_cell = nn.LSTMCell(projected_size, hidden_size)
         self.lstm1_drop = nn.Dropout(p=0.5)
 
-        # bd是一个边界检测单元
-        self.bd = BoundaryDetector(projected_size, hidden_size, mid_size)
-
-        # lstm2_cell是高层的视频序列编码单元
-        self.lstm2_cell = nn.LSTMCell(hidden_size, hidden_size, bias=False)
-        self.lstm2_drop = nn.Dropout(p=0.5)
-
     def _init_lstm_state(self, d):
         bsz = d.size(0)
         return Variable(d.data.new(bsz, self.hidden_size).zero_()), \
             Variable(d.data.new(bsz, self.hidden_size).zero_())
 
-    def forward(self, video_feats):
+    def forward(self, video_feats, len_list):
         '''
         用Hierarchical Boundary-Aware Neural Encoder对视频进行编码
         '''
         batch_size = len(video_feats)
+        lenRun = max(len_list)
+        # Mask for getting the appropriate encoder output for decoder
+        len_list = (torch.LongTensor(len_list).view(1, -1, 1)).repeat(
+            1, 1, lenRun)
         # 初始化LSTM状态
         lstm1_h, lstm1_c = self._init_lstm_state(video_feats)
-        lstm2_h, lstm2_c = self._init_lstm_state(video_feats)
 
         # 只取表观特征
         video_feats = video_feats[:, :, :self.feature_size].contiguous()
@@ -226,20 +93,16 @@ class Encoder(nn.Module):
         v = self.frame_drop(v)
         v = v.view(batch_size, -1, self.projected_size)
 
-        for i in range(self.max_frames):
-            s = self.bd(v[:, i, :], lstm1_h)
-            # print(sum(s.data)[0])
+        lstmh_list = []
+        for i in range(lenRun):
             lstm1_h, lstm1_c = self.lstm1_cell(v[:, i, :], (lstm1_h, lstm1_c))
+            lstmh_list.append(lstm1_h)
             lstm1_h = self.lstm1_drop(lstm1_h)
 
-            lstm2_input = lstm1_h * s
-            lstm2_h, lstm2_c = self.lstm2_cell(lstm2_input, (lstm2_h, lstm2_c))
-            lstm2_h = self.lstm2_drop(lstm2_h)
+        lstm_h_stack = torch.stack(lstmh_list, 1)
+        lstm_h_select = lstm_h_stack.gather(0, len_list).squeeze()
 
-            lstm1_h = lstm1_h * (1 - s)
-            lstm1_c = lstm1_c * (1 - s)
-
-        return lstm2_h
+        return lstm_h_select
 
 
 class Decoder(nn.Module):
