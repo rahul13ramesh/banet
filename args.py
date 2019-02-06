@@ -72,6 +72,7 @@ feat_dir = 'feats'
 if not os.path.exists(feat_dir):
     os.mkdir(feat_dir)
 
+
 vocab_pkl_path = os.path.join(feat_dir, ds + '_vocab.pkl')
 caption_pkl_path = os.path.join(feat_dir, ds + '_captions.pkl')
 caption_pkl_base = os.path.join(feat_dir, ds + '_captions')
@@ -80,6 +81,7 @@ val_caption_pkl_path = caption_pkl_base + '_val.pkl'
 test_caption_pkl_path = caption_pkl_base + '_test.pkl'
 
 feature_h5_path = os.path.join(feat_dir, ds + '_features.h5')
+smallvid_path = os.path.join(feat_dir, ds + '_smallVids.pkl')
 feature_h5_feats = 'feats'
 feature_h5_lens = 'lens'
 

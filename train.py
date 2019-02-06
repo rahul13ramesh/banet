@@ -9,7 +9,7 @@ import pickle
 from utils import blockPrint, enablePrint
 from caption import Vocabulary
 from data import get_train_loader
-from model import BANet
+from model import Seq2Seq, PickNet
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -36,18 +36,19 @@ with open(vocab_pkl_path, 'rb') as f:
 vocab_size = len(vocab)
 
 # 构建模型
-banet = BANet(feature_size, projected_size, mid_size, hidden_size,
-              max_frames, max_words, vocab)
+seqMod = Seq2Seq(feature_size, projected_size, mid_size, hidden_size,
+                 max_frames, max_words, vocab)
 
+picknet = PickNet()
 
 if os.path.exists(banet_pth_path) and use_checkpoint:
-    banet.load_state_dict(torch.load(banet_pth_path))
+    seqMod.load_state_dict(torch.load(banet_pth_path))
 if use_cuda:
-    banet.cuda()
+    seqMod.cuda()
 
 # 初始化损失函数和优化器
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(banet.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(seqMod.parameters(), lr=learning_rate)
 if os.path.exists(optimizer_pth_path) and use_checkpoint:
     optimizer.load_state_dict(torch.load(optimizer_pth_path))
 
@@ -79,7 +80,7 @@ for epoch in range(num_epochs):
             targets = targets.cuda()
 
         optimizer.zero_grad()
-        outputs, video_encoded = banet(videos, targets, epsilon)
+        outputs, video_encoded = seqMod(videos, targets, epsilon)
         # 因为在一个epoch快要结束的时候，有可能采不到一个刚好的batch
         # 所以要重新计算一下batch size
         bsz = len(captions)
@@ -101,19 +102,19 @@ for epoch in range(num_epochs):
                   (epoch, num_epochs, i, total_step, loss_count,
                    np.exp(loss_count)))
             loss_count = 0
-            tokens = banet.decoder.sample(video_encoded)
+            tokens = seqMod.decoder.sample(video_encoded)
             tokens = tokens.data[0].squeeze()
-            we = banet.decoder.decode_tokens(tokens)
-            gt = banet.decoder.decode_tokens(captions[0].squeeze())
+            we = seqMod.decoder.decode_tokens(tokens)
+            gt = seqMod.decoder.decode_tokens(captions[0].squeeze())
             print('[vid:%d]' % video_ids[0])
             print('WE: %s\nGT: %s' % (we, gt))
 
-    torch.save(banet.state_dict(), banet_pth_path)
+    torch.save(seqMod.state_dict(), banet_pth_path)
     torch.save(optimizer.state_dict(), optimizer_pth_path)
     # 计算一下在val集上的性能并记录下来
     blockPrint()
-    banet.eval()
-    metrics = evaluate(vocab, banet, test_range, test_prediction_txt_path, reference)
+    seqMod.eval()
+    metrics = evaluate(vocab, seqMod, test_range, test_prediction_txt_path, reference)
     enablePrint()
     for k, v in metrics.items():
         #  log_value(k, v, epoch)
@@ -123,4 +124,9 @@ for epoch in range(num_epochs):
             shutil.copy2(banet_pth_path, best_banet_pth_path)
             shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
             best_meteor = v
-    banet.train()
+    seqMod.train()
+
+
+
+#  Flow of code:
+#  1) Get sequence of fraes

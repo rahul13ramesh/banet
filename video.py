@@ -13,7 +13,7 @@ import skimage
 import torch
 from torch.autograd import Variable
 from model import AppearanceEncoder
-from args import video_root, video_sort_lambda
+from args import video_root
 from args import feature_h5_path, feature_h5_feats, feature_h5_lens
 from args import max_frames, feature_size
 
@@ -87,10 +87,10 @@ def preprocess_frame(image, target_height=224, target_width=224):
 
 def extract_features(aencoder):
     # Read videos list and let  the videos sort by id
-	# This should be same as youtube mapping
+    # This should be same as youtube mapping
     videos = sorted(os.listdir(video_root))
     nvideos = len(videos)
- 
+
     #  Create hdf5 file that saves feature
     if os.path.exists(feature_h5_path):
         # If it exists, that means it has been processed before but not completely
@@ -123,14 +123,6 @@ def extract_features(aencoder):
 
         #  Extract feature list
         af = aencoder(frame_list).data.cpu().numpy()
-
-        #  Uncomment to use motion encoder
-        #  Extract Action features
-        #  clip_list = np.array([[resize_frame(x, 112, 112)
-                               #  for x in clip] for clip in clip_list])
-        #  clip_list = clip_list.transpose(0, 4, 1, 2, 3).astype(np.float32)
-        #  clip_list = Variable(torch.from_numpy(clip_list), volatile=True).cuda()
-        #  mf = mencoder(clip_list)
 
         # Merge feature, motion encoders
         feats[:frame_count, :] = af

@@ -9,6 +9,7 @@ from builtins import range
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.models as models
 
 from args import resnet_checkpoint
@@ -204,10 +205,10 @@ class Decoder(nn.Module):
         return caption
 
 
-class BANet(nn.Module):
+class Seq2Seq(nn.Module):
     def __init__(self, feature_size, projected_size, mid_size, hidden_size,
                  max_frames, max_words, vocab):
-        super(BANet, self).__init__()
+        super(Seq2Seq, self).__init__()
         self.encoder = Encoder(feature_size, projected_size, mid_size, hidden_size,
                                max_frames)
         self.decoder = Decoder(hidden_size, projected_size, hidden_size,
@@ -217,3 +218,21 @@ class BANet(nn.Module):
         video_encoded = self.encoder(videos)
         output = self.decoder(video_encoded, captions, teacher_forcing_ratio)
         return output, video_encoded
+
+
+class PickNet(nn.Module):
+    def __init__(self):
+        #  First change to grayscale
+        #  Resize to 56x56
+        super(PickNet, self).__init__()
+        self.w1 = nn.Linear(56 * 56, 1024)
+        self.w2 = nn.Linear(1024, 2)
+
+    def forward(self, video_frame_diff, batchLen, batchSize):
+        #  Flatten image
+        #  Next layer is 1024
+        #  Softmax of 2 units (policy network)
+        flat_feats = video_frame_diff(batchSize, -1)
+        hidden = F.relu(self.w1(flat_feats))
+        policy = F.Softmax(self.w2(hidden))
+        return policy

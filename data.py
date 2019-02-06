@@ -6,6 +6,7 @@ import torch
 import torch.utils.data as data
 from args import train_caption_pkl_path
 from args import feature_h5_path, feature_h5_feats
+from args import smallvid_path
 
 
 class V2TDataset(data.Dataset):
@@ -24,6 +25,10 @@ class V2TDataset(data.Dataset):
         h5_file = h5py.File(feature_h5, 'r')
         self.video_feats = h5_file[feature_h5_feats]
 
+        # Read all the videos of size 56x56
+        with open(smallvid_path, 'rb') as fl:
+            self.small_vids = pickle.load(fl)
+
     def __getitem__(self, index):
         '''
         返回一个训练样本对（包含视频frame特征和对应的caption）
@@ -33,7 +38,8 @@ class V2TDataset(data.Dataset):
         length = self.lengths[index]
         video_id = self.video_ids[index]
         video_feat = torch.from_numpy(self.video_feats[video_id])
-        return video_feat, caption, length, video_id
+        small_vid = self.small_vids[video_id]
+        return video_feat, small_vid, caption, length, video_id
 
     def __len__(self):
         return len(self.captions)
@@ -49,13 +55,17 @@ class VideoDataset(data.Dataset):
         h5_file = h5py.File(feature_h5, 'r')
         self.video_feats = h5_file[feature_h5_feats]
 
+        with open(smallvid_path, 'rb') as fl:
+            self.small_vids = pickle.load(fl)
+
     def __getitem__(self, index):
         '''
         返回一个训练样本对（包含视频特征和对应的ID）
         '''
         video_id = self.eval_list[index]
         video_feat = torch.from_numpy(self.video_feats[video_id])
-        return video_feat, video_id
+        small_vid = self.small_vids[video_id]
+        return video_feat, small_vid, video_id
 
     def __len__(self):
         return len(self.eval_list)
@@ -68,31 +78,32 @@ def train_collate_fn(data):
     # 根据video的长度对数据进行排序
     data.sort(key=lambda x: x[-1], reverse=True)
 
-    videos, captions, lengths, video_ids = zip(*data)
+    videos, small_vids, captions, lengths, video_ids = zip(*data)
 
     # 把视频合并在一起（把2D Tensor的序列变成3D Tensor）
     videos = torch.stack(videos, 0)
 
     # 把caption合并在一起（把1D Tensor的序列变成一个2D Tensor）
     captions = torch.stack(captions, 0)
-    return videos, captions, lengths, video_ids
+    return videos, small_vids, captions, lengths, video_ids
 
 
-def eval_collate_fn(data):
+def eval_collate_fn(dat):
     '''
     用来把多个数据样本合并成一个minibatch的函数
     '''
-    data.sort(key=lambda x: x[-1], reverse=True)
+    dat.sort(key=lambda x: x[-1], reverse=True)
 
-    videos, video_ids = zip(*data)
+    videos, small_vids, video_ids = zip(*dat)
 
     # 把视频合并在一起（把2D Tensor的序列变成3D Tensor）
     videos = torch.stack(videos, 0)
 
-    return videos, video_ids
+    return videos, small_vids, video_ids
 
 
-def get_train_loader(cap_pkl, feature_h5, batch_size=10, shuffle=True, num_workers=0, pin_memory=True):
+def get_train_loader(cap_pkl, feature_h5, batch_size=10,
+                     shuffle=True, num_workers=0, pin_memory=True):
     v2t = V2TDataset(cap_pkl, feature_h5)
     data_loader = torch.utils.data.DataLoader(dataset=v2t,
                                               batch_size=batch_size,
